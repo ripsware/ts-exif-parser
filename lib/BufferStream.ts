@@ -1,102 +1,105 @@
-export class BufferStream {
-  endPosition;
+import {Buffer} from 'buffer';
+import {NBufferStream} from './NBufferStream';
+import {Marker} from './interfaces';
 
-  constructor(private buffer,
-              public offset:number = 0,
-              private length: number = buffer.length,
-              private bigEndian?: boolean) {
+export class BufferStream extends NBufferStream<Buffer> {
+  endPosition: number;
+
+  constructor
+  (
+    private buffer: Buffer,
+    public offset: number = 0,
+    private length: number = buffer.length,
+    public bigEndian: boolean = false
+  ) {
+    super();
     this.endPosition = this.offset + length;
-    this.setBigEndian(bigEndian);
   }
 
-  setBigEndian(bigEndian) {
-    this.bigEndian = !!bigEndian;
-  }
-
-  nextUInt8() {
-    let value = this.buffer.readUInt8(this.offset);
+  nextUInt8(): number {
+    const value = this.buffer.readUInt8(this.offset);
     this.offset += 1;
     return value;
   }
 
-  nextInt8() {
-    let value = this.buffer.readInt8(this.offset);
+  nextInt8(): number {
+    const value = this.buffer.readInt8(this.offset);
     this.offset += 1;
     return value;
   }
 
-  nextUInt16() {
-    let value = this.bigEndian ? this.buffer.readUInt16BE(this.offset) : this.buffer.readUInt16LE(this.offset);
+  nextUInt16(): number {
+    const value = this.bigEndian ? this.buffer.readUInt16BE(this.offset) : this.buffer.readUInt16LE(this.offset);
     this.offset += 2;
     return value;
   }
 
-  nextUInt32() {
-    let value = this.bigEndian ? this.buffer.readUInt32BE(this.offset) : this.buffer.readUInt32LE(this.offset);
+  nextUInt32(): number {
+    const value = this.bigEndian ? this.buffer.readUInt32BE(this.offset) : this.buffer.readUInt32LE(this.offset);
     this.offset += 4;
     return value;
   }
 
-  nextInt16() {
-    let value = this.bigEndian ? this.buffer.readInt16BE(this.offset) : this.buffer.readInt16LE(this.offset);
+  nextInt16(): number {
+    const value = this.bigEndian ? this.buffer.readInt16BE(this.offset) : this.buffer.readInt16LE(this.offset);
     this.offset += 2;
     return value;
   }
 
-  nextInt32() {
-    let value = this.bigEndian ? this.buffer.readInt32BE(this.offset) : this.buffer.readInt32LE(this.offset);
+  nextInt32(): number {
+    const value = this.bigEndian ? this.buffer.readInt32BE(this.offset) : this.buffer.readInt32LE(this.offset);
     this.offset += 4;
     return value;
   }
 
-  nextFloat() {
-    let value = this.bigEndian ? this.buffer.readFloatBE(this.offset) : this.buffer.readFloatLE(this.offset);
+  nextFloat(): number {
+    const value = this.bigEndian ? this.buffer.readFloatBE(this.offset) : this.buffer.readFloatLE(this.offset);
     this.offset += 4;
     return value;
   }
 
-  nextDouble() {
-    let value = this.bigEndian ? this.buffer.readDoubleBE(this.offset) : this.buffer.readDoubleLE(this.offset);
+  nextDouble(): number {
+    const value = this.bigEndian ? this.buffer.readDoubleBE(this.offset) : this.buffer.readDoubleLE(this.offset);
     this.offset += 8;
     return value;
   }
 
-  nextBuffer(length) {
-    let value = this.buffer.slice(this.offset, this.offset + length);
+  nextBuffer(length: number): Buffer {
+    const value = this.buffer.slice(this.offset, this.offset + length);
     this.offset += length;
     return value;
   }
 
-  remainingLength() {
+  remainingLength(): number {
     return this.endPosition - this.offset;
   }
 
-  nextString(length) {
-    let value = this.buffer.toString('utf8', this.offset, this.offset + length);
+  nextString(length: number): string {
+    const value = this.buffer.toString('utf8', this.offset, this.offset + length);
     this.offset += length;
     return value;
   }
 
-  mark() {
-    let self = this;
+  mark(): Marker<BufferStream> {
     return {
-      openWithOffset(offset) {
-        offset = (offset || 0) + this.offset;
-        return new BufferStream(self.buffer, offset, self.endPosition - offset, self.bigEndian);
-      },
+      openWithOffset: this.openWithOffset,
       offset: this.offset
     };
   }
 
-  offsetFrom(marker) {
+  openWithOffset(offset: number): BufferStream {
+    return new BufferStream(this.buffer, (offset || 0) + this.offset, this.endPosition - offset, this.bigEndian);
+  }
+
+  offsetFrom(marker: { offset: number }): number {
     return this.offset - marker.offset;
   }
 
-  skip(amount) {
+  skip(amount: number) {
     this.offset += amount;
   }
 
-  branch(offset, length) {
+  branch(offset: number, length: number): BufferStream {
     length = typeof length === 'number' ? length : this.endPosition - (this.offset + offset);
     return new BufferStream(this.buffer, this.offset + offset, length, this.bigEndian);
   }

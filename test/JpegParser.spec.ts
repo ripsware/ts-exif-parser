@@ -1,7 +1,7 @@
-import * as assert from "assert";
-import * as fs from "fs";
-import {BufferStream} from "../lib/BufferStream";
-import {JpegParser} from "../lib/JpegParser";
+import * as assert from 'assert';
+import * as fs from 'fs';
+import {BufferStream} from '../lib/BufferStream';
+import {JpegParser} from '../lib/JpegParser';
 
 describe('JpegParser', () => {
   const buf = fs.readFileSync(__dirname + '/assets/test.jpg');

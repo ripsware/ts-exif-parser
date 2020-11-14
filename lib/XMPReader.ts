@@ -38,14 +38,14 @@ export class XMPReader {
 
   static getLastKeyFromPath(path: string[]): string {
     return path.filter(p => envelopeTags.indexOf(p) < 0).pop();
-  };
+  }
 
   static getKeyFromPath(path: string[]): string {
     return path
       .filter((p: string) => envelopeTags.indexOf(p) < 0)
       .map((p: string) => keyTransform[p] || p)
       .map((p: string) => p.indexOf(':') >= 0 ? p.split(':')[1] : p)
-      .map((p: string, i: number) => i == 0 ? this.lowercaseFirstLetter(p) : this.capitalizeFirstLetter(p))
+      .map((p: string, i: number) => i === 0 ? this.lowercaseFirstLetter(p) : this.capitalizeFirstLetter(p))
       .join('');
   }
 
@@ -63,18 +63,18 @@ export class XMPReader {
 
   public static read(buffer: Buffer) {
     return new Promise((resolve, reject) => {
-      let data = {
+      const data = {
         raw: {}
       };
-      let offsetBegin = buffer.indexOf(markerBegin);
+      const offsetBegin = buffer.indexOf(markerBegin);
       if (offsetBegin > 0) {
-        let offsetEnd = buffer.indexOf(markerEnd);
+        const offsetEnd = buffer.indexOf(markerEnd);
         if (offsetEnd > 0) {
-          let xmlBuffer = buffer.slice(offsetBegin, offsetEnd + markerEnd.length);
-          let parser = sax.parser(true, {});
+          const xmlBuffer = buffer.slice(offsetBegin, offsetEnd + markerEnd.length);
+          const parser = sax.parser(true, {});
           let nodeName;
 
-          let nodePath = [];
+          const nodePath = [];
 
           parser.onerror = (err) => reject(err);
           parser.onend = () => resolve(data);
@@ -90,8 +90,8 @@ export class XMPReader {
 
 
           parser.ontext = (text) => {
-            if (text.trim() != '') {
-              var value;
+            if (text.trim() !== '') {
+              let value;
               switch (nodeName) {
                 case 'stArea:x':
                 case 'stArea:y':
@@ -100,25 +100,29 @@ export class XMPReader {
                   value = parseFloat(text);
                   break;
                 case 'xmp:Rating':
-                  value = parseInt(text);
+                  value = parseInt(text as any, null);
                   break;
                 case 'MicrosoftPhoto:Rating':
-                  value = Math.floor((parseInt(text) + 12) / 25) + 1;
+                  value = Math.floor((parseInt(text as any, null) + 12) / 25) + 1;
                   break;
                 default:
                   value = text;
               }
-              let rawKey = this.getLastKeyFromPath(nodePath);
+              const rawKey = this.getLastKeyFromPath(nodePath);
               data.raw[rawKey] = this.updateData(data.raw[rawKey], value);
 
-              let key = this.getKeyFromPath(nodePath);
+              const key = this.getKeyFromPath(nodePath);
               data[key] = this.updateData(data[key], value);
             }
           };
 
           parser.write(xmlBuffer.toString('utf-8', 0, xmlBuffer.length)).close();
-        } else resolve(data);
-      } else resolve(data);
+        } else {
+          resolve(data);
+        }
+      } else {
+        resolve(data);
+      }
 
     });
   }

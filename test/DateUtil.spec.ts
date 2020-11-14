@@ -1,5 +1,5 @@
-import {DateUtil} from "../lib/DateUtil";
-import * as assert from "assert";
+import * as assert from 'assert';
+import {DateUtil} from '../lib/DateUtil';
 
 describe('DateUtil', () => {
 
@@ -19,7 +19,7 @@ describe('DateUtil', () => {
 
     const dateStr = '1990:02:14 14:30:14';
     const timestamp = DateUtil.parseDateWithSpecFormat(dateStr);
-    //between 1970 and 1990 there were 5 leap years: 1972, 1976, 1980, 1984, 1988
+    // between 1970 and 1990 there were 5 leap years: 1972, 1976, 1980, 1984, 1988
     const expectedTimestamp = (15 * years) + (5 * leapYears) +
       ((31 + 13) * days) + (14 * hours) + (30 * minutes) + 14;
     assert.strictEqual(timestamp, expectedTimestamp);
@@ -35,9 +35,9 @@ describe('DateUtil', () => {
     const dateStr = '2004-09-04T23:39:06-08:00';
     const timestamp = DateUtil.parseDateWithTimezoneFormat(dateStr);
     const yearsFromEpoch = 2004 - 1970;
-    //1972, 1976, 1980, 1984, 1988, 1992, 1996, 2000
+    // 1972, 1976, 1980, 1984, 1988, 1992, 1996, 2000
     const leapYearsCount = 8;
-    //2004 is a leap year as well, hence 29 days for february
+    // 2004 is a leap year as well, hence 29 days for february
     const dayCount = 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 3;
     const expectedTimestamp = (yearsFromEpoch - leapYearsCount) * years +
       leapYearsCount * leapYears +
@@ -45,7 +45,7 @@ describe('DateUtil', () => {
       23 * hours +
       39 * minutes +
       6 +
-      8 * hours;	//for timezone
+      8 * hours;	// for timezone
     assert.strictEqual(timestamp, expectedTimestamp);
   });
   it('should parse invalid date with timezone', () => {

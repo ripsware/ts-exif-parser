@@ -1,11 +1,9 @@
-/*jslint browser: true, devel: true, bitwise: false, debug: true, eqeq: false, es5: true, evil: false, forin: false, newcap: false, nomen: true, plusplus: true, regexp: false, unparam: false, sloppy: true, stupid: false, sub: false, todo: true, lets: true, white: true */
-import {simplify} from "./simplify";
-import {JpegParser} from "./JpegParser";
-import {ExifSectionParser, ExifSections} from "./ExifSectionParser";
-import {Tags} from "./exif-tags";
-import {ExifData} from "./ExifData";
-
-
+import {simplify} from './simplify';
+import {JpegParser} from './JpegParser';
+import {ExifSectionParser, ExifSections} from './ExifSectionParser';
+import {Tags} from './exif-tags';
+import {ExifData} from './ExifData';
+import {NBufferStream} from './NBufferStream';
 
 
 export class ExifParser {
@@ -18,85 +16,93 @@ export class ExifParser {
     returnTags: true
   };
 
-  constructor(private stream) {
+  constructor(private stream: NBufferStream<any>) {
   }
 
-  enableBinaryFields(enable: boolean) {
+  set enableBinaryFields(enable: boolean) {
     this.flags.readBinaryTags = enable;
-    return this;
   }
 
-  enablePointers(enable: boolean) {
+  get enableBinaryFields(): boolean {
+    return this.flags.readBinaryTags;
+  }
+
+  set enablePointers(enable: boolean) {
     this.flags.hidePointers = !enable;
-    return this;
   }
 
-  enableTagNames(enable: boolean) {
+  get enablePointers(): boolean {
+    return this.flags.hidePointers;
+  }
+
+  set enableTagNames(enable: boolean) {
     this.flags.resolveTagNames = enable;
-    return this;
   }
 
-  enableImageSize(enable: boolean) {
+  get enableTagNames(): boolean {
+    return this.flags.resolveTagNames;
+  }
+
+  set enableImageSize(enable: boolean) {
     this.flags.imageSize = enable;
-    return this;
   }
 
-  enableReturnTags(enable: boolean) {
+  get enableImageSize(): boolean {
+    return this.flags.imageSize;
+  }
+
+  set enableReturnTags(enable: boolean) {
     this.flags.returnTags = enable;
-    return this;
   }
 
-  public enableSimpleValues(enable: boolean) {
+  get enableReturnTags(): boolean {
+    return this.flags.returnTags;
+  }
+
+  set enableSimpleValues(enable: boolean) {
     this.flags.simplifyValues = enable;
-    return this;
+  }
+
+  get enableSimpleValues(): boolean {
+    return this.flags.simplifyValues;
   }
 
   parse(): ExifData {
-    let start = this.stream.mark(),
-      stream = start.openWithOffset(0),
-      flags = this.flags,
-      tags,
-      imageSize,
-      thumbnailOffset,
-      thumbnailLength,
-      thumbnailType,
-      app1Offset,
-      getTagValue, setTagValue;
-
-    if (flags.resolveTagNames) {
-      tags = {};
-      getTagValue = function (t) {
-        return tags[t.name];
-      };
-      setTagValue = function (t, value) {
+    const start = this.stream.mark();
+    const stream = start.openWithOffset(0);
+    const flags = this.flags;
+    const tags: { [key: string]: { name?: string, value: any, section?: any, type?: any } } = {};
+    let imageSize;
+    let thumbnailOffset;
+    let thumbnailLength;
+    let thumbnailType;
+    let app1Offset;
+    const getTagValue = (t: { name?: string; value: any; section?: any, type?: any }) => {
+      if (flags.resolveTagNames) {
+        return tags[t.name] ? tags[name].value : null;
+      }
+      const res = Object.entries(tags)
+        .map(item => item[1])
+        .find(item => item.type === t.type && item.section === t.section);
+      return res ? res.value : null;
+    };
+    const setTagValue = (t: { name?: string, value: any, section?: any, type?: any }, value: any) => {
+      if (flags.resolveTagNames) {
         tags[t.name] = value;
-      };
-    } else {
-      tags = [];
-      getTagValue = function (t) {
-        let i;
-        for (i = 0; i < tags.length; ++i) {
-          if (tags[i].type === t.type && tags[i].section === t.section) {
-            return tags.value;
-          }
-        }
-      };
-      setTagValue = function (t, value) {
-        let i;
-        for (i = 0; i < tags.length; ++i) {
-          if (tags[i].type === t.type && tags[i].section === t.section) {
-            tags.value = value;
-            return;
-          }
-        }
-      };
-    }
+      } else {
+        Object.entries(tags)
+          .filter(item => item[1].type === t.type && item[1].section === t.section)
+          .forEach(item => tags[item[0]] = value);
+      }
+    };
 
     JpegParser.parseSections(stream, function (sectionType, sectionStream) {
-      let validExifHeaders, sectionOffset = sectionStream.offsetFrom(start);
+      let validExifHeaders;
+      const sectionOffset = sectionStream.offsetFrom(start);
       if (sectionType === 0xE1) {
+        let counter = 0;
         validExifHeaders = ExifSectionParser.parseTags(sectionStream, function (ifdSection, tagType, value, format) {
-          //ignore binary fields if disabled
+          // ignore binary fields if disabled
           if (!flags.readBinaryTags && format === 7) {
             return;
           }
@@ -117,7 +123,7 @@ export class ExifParser {
               return;
             }
           }
-          //if flag is set to not store tags, return here after storing pointers
+          // if flag is set to not store tags, return here after storing pointers
           if (!flags.returnTags) {
             return;
           }
@@ -126,7 +132,7 @@ export class ExifParser {
             value = simplify.simplifyValue(value, format);
           }
           if (flags.resolveTagNames) {
-            let sectionTagNames = ifdSection === ExifSections.GPSIFD ? Tags.GPS : Tags.Exif;
+            const sectionTagNames = ifdSection === ExifSections.GPSIFD ? Tags.GPS : Tags.Exif;
             let name = sectionTagNames[tagType];
             if (!name) {
               name = Tags.Exif[tagType];
@@ -135,18 +141,18 @@ export class ExifParser {
               tags[name] = value;
             }
           } else {
-            tags.push({
+            tags[`${counter}`] = {
               section: ifdSection,
               type: tagType,
               value: value
-            });
+            };
+            counter++;
           }
         });
         if (validExifHeaders) {
           app1Offset = sectionOffset;
         }
-      }
-      else if (flags.imageSize && JpegParser.getSectionName(sectionType).name === 'SOF') {
+      } else if (flags.imageSize && JpegParser.getSectionName(sectionType).name === 'SOF') {
         imageSize = JpegParser.getSizeFromSOFSection(sectionStream);
       }
     });
@@ -156,6 +162,6 @@ export class ExifParser {
       simplify.castDateValues(getTagValue, setTagValue);
     }
 
-    return new ExifData(start, tags, imageSize, thumbnailOffset, thumbnailLength, thumbnailType, app1Offset);
+    return new ExifData(stream, (flags.resolveTagNames ? tags : Object.values(flags)) as any, imageSize, thumbnailOffset, thumbnailLength, thumbnailType, app1Offset);
   }
 }

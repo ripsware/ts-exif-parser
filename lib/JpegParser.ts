@@ -1,32 +1,32 @@
-/*jslint browser: true, devel: true, bitwise: false, debug: true, eqeq: false, es5: true, evil: false, forin: false, newcap: false, nomen: true, plusplus: true, regexp: false, unparam: false, sloppy: true, stupid: false, sub: false, todo: true, vars: true, white: true */
+import {NBufferStream} from './NBufferStream';
+import {Size} from './interfaces';
 
 export class JpegParser {
 
-
-  public static parseSections(stream, iterator) {
-    let len, markerType;
-    stream.setBigEndian(true);
-    //stop reading the stream at the SOS (Start of Stream) marker,
-    //because its length is not stored in the header so we can't
-    //know where to jump to. The only marker after that is just EOI (End Of Image) anyway
-    while (stream.remainingLength() > 0 && markerType !== 0xDA) {
+  public static parseSections<T>(stream: NBufferStream<T>, callback: (sectionType: number, sectionStream: NBufferStream<T>) => void): void {
+    let len: number;
+    let sectionType: number;
+    stream.bigEndian = true;
+    // stop reading the stream at the SOS (Start of Stream) marker,
+    // because its length is not stored in the header so we can't
+    // know where to jump to. The only marker after that is just EOI (End Of Image) anyway
+    while (stream.remainingLength() > 0 && sectionType !== 0xDA) {
       if (stream.nextUInt8() !== 0xFF) {
         return;
       }
-      markerType = stream.nextUInt8();
-      //don't read size from markers that have no datas
-      if ((markerType >= 0xD0 && markerType <= 0xD9) || markerType === 0xDA) {
+      sectionType = stream.nextUInt8();
+      // don't read size from markers that have no data
+      if ((sectionType >= 0xD0 && sectionType <= 0xD9) || sectionType === 0xDA) {
         len = 0;
       } else {
         len = stream.nextUInt16() - 2;
       }
-      iterator(markerType, stream.branch(0, len));
+      callback(sectionType, stream.branch(0, len));
       stream.skip(len);
     }
   }
 
-//stream should be located after SOF section size and in big endian mode, like passed to parseSections iterator
-  public static getSizeFromSOFSection(stream) {
+  public static getSizeFromSOFSection<T>(stream: NBufferStream<T>): Size {
     stream.skip(1);
     return {
       height: stream.nextUInt16(),
@@ -35,7 +35,7 @@ export class JpegParser {
   }
 
 
-  public static getSectionName(markerType) {
+  public static getSectionName(markerType: number): { name: string, index?: number } {
     let name, index;
     switch (markerType) {
       case 0xD8:
@@ -63,18 +63,16 @@ export class JpegParser {
         if (markerType >= 0xE0 && markerType <= 0xEF) {
           name = 'APP';
           index = markerType - 0xE0;
-        }
-        else if (markerType >= 0xC0 && markerType <= 0xCF && markerType !== 0xC4 && markerType !== 0xC8 && markerType !== 0xCC) {
+        } else if (markerType >= 0xC0 && markerType <= 0xCF && markerType !== 0xC4 && markerType !== 0xC8 && markerType !== 0xCC) {
           name = 'SOF';
           index = markerType - 0xC0;
-        }
-        else if (markerType >= 0xD0 && markerType <= 0xD7) {
+        } else if (markerType >= 0xD0 && markerType <= 0xD7) {
           name = 'RST';
           index = markerType - 0xD0;
         }
         break;
     }
-    let nameStruct: { name: string, index?: number } = {
+    const nameStruct: { name: string, index?: number } = {
       name: name
     };
     if (typeof index === 'number') {

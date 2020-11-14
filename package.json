@@ -1,8 +1,8 @@
 {
   "name": "ts-exif-parser",
-  "version": "0.2.1",
+  "version": "0.2.1-alpha-1",
   "description": "A typescript library to extract Exif metadata from images, in node and in the browser.",
-  "author": "Patik Braun, former: Bruno Windels <bruno.windels@gmail.com>",
+  "author": "Rio Permana, former: (Patik Braun, former: (Bruno Windels <bruno.windels@gmail.com>))",
   "keywords": [
     "exif",
     "image",
@@ -18,7 +18,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "http://github.com/bpatrik/ts-exif-parser.git"
+    "url": "http://github.com/ripsware/ts-exif-parser.git"
   },
   "devDependencies": {
     "@types/assert": "1.4.0",
@@ -26,14 +26,15 @@
     "@types/node": "10.12.0",
     "@types/sax": "1.0.1",
     "assert": "1.4.1",
-    "mocha": "5.2.0",
+    "mocha": "^8.2.1",
     "ts-node": "7.0.1",
     "tslint": "5.11.0",
     "tslint-consistent-codestyle": "1.13.3",
-    "typescript": "3.1.3",
+    "typescript": "4.0.5",
     "uglify-js": "3.4.9"
   },
   "dependencies": {
+    "buffer": "^6.0.2",
     "sax": "1.2.4"
   }
 }

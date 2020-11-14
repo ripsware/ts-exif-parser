@@ -1,8 +1,8 @@
 export {ExifParserFactory} from './lib/ExifParserFactory';
+export {ExifData} from './lib/ExifData';
+export {OrientationTypes} from './lib/enums';
 export {
-  OrientationTypes,
-  ExifData,
   ExifTags,
-  ImageSize,
-  ThumbnailTypes,
-} from './lib/ExifData';
+  Size,
+  ThumbnailTypes
+} from './lib/interfaces';

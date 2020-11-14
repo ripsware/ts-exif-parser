@@ -1,19 +1,22 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "skipLibCheck": true,
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es5",
     "typeRoots": [
       "node_modules/@types"
     ],
+    "importHelpers": true,
+    "target": "esnext",
+    "module": "esnext",
     "lib": [
-      "es2016",
+      "esnext",
       "dom"
-    ]
+    ],
+    "outDir": "./dist"
   }
 }
