@@ -1,0 +1,1 @@
+{"version":3,"file":"NBufferStream.js","sourceRoot":"","sources":["../../lib/NBufferStream.ts"],"names":[],"mappings":"AAEA,MAAM,OAAgB,aAAa;IAIjC,IAAI,YAAY;QACd,OAAO,CAAC,IAAI,CAAC,SAAS,CAAC;IACzB,CAAC;IAED,IAAI,YAAY,CAAC,KAAc;QAC7B,IAAI,CAAC,SAAS,GAAG,CAAC,KAAK,CAAC;IAC1B,CAAC;CAiCF"}
